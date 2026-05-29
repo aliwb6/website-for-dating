@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>یه سوال مهم 💌</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --rose:       #E11D48;
+      --rose-light: #FB7185;
+      --petal:      #FFF1F2;
+      --gold:       #FACC15;
+      --gold-dark:  #D97706;
+      --ink:        #4C0519;
+      --ink-soft:   #881337;
+      --cream:      #FFFBF5;
+      --coral:      #FF6B6B;
+      --pink-bubble:#FFB3C1;
+      --spring: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background: var(--petal);
+      color: var(--ink);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      direction: rtl;
+      cursor: none;
+    }
+
+    /* ===== CUSTOM CURSOR ===== */
+    #cursor {
+      position: fixed;
+      width: 18px; height: 18px;
+      background: var(--rose);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, background 0.2s;
+      mix-blend-mode: multiply;
+    }
+
+    /* ===== SPARKLE TRAIL ===== */
+    .sparkle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      font-size: 14px;
+      animation: sparkle-fall 0.8s ease-out forwards;
+    }
+    @keyframes sparkle-fall {
+      0%   { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(-40px) scale(0.3) rotate(180deg); }
+    }
+
+    /* ===== FLOATING BACKGROUND ELEMENTS ===== */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .floater {
+      position: absolute;
+      bottom: -60px;
+      animation: float-up linear infinite;
+      pointer-events: none;
+      user-select: none;
+      will-change: transform;
+    }
+
+    @keyframes float-up {
+      0%   { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+      50%  { opacity: 0.4; }
+      100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* ===== STAGE SYSTEM ===== */
+    #app {
+      position: relative;
+      z-index: 1;
+      min-height: 100dvh;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: none;
+    }
+
+    .stage.active {
+      opacity: 1;
+      pointer-events: all;
+      position: relative;
+    }
+
+    /* Fold out animation */
+    .stage.fold-out {
+      animation: fold-out 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes fold-out {
+      0%   { opacity: 1; transform: perspective(800px) rotateY(0deg) translateX(0); }
+      100% { opacity: 0; transform: perspective(800px) rotateY(-90deg) translateX(-100px); }
+    }
+
+    /* Fold in animation */
+    .stage.fold-in {
+      animation: fold-in 0.6s var(--spring) forwards;
+    }
+    @keyframes fold-in {
+      0%   { opacity: 0; transform: perspective(800px) rotateY(90deg) translateX(100px); }
+      100% { opacity: 1; transform: perspective(800px) rotateY(0deg) translateX(0); }
+    }
+
+    /* ===== BLOB BACKGROUNDS ===== */
+    .blob-bg {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.35;
+    }
+
+    /* ===== TYPOGRAPHY ===== */
+    .title-bounce {
+      animation: title-bounce-in 0.8s var(--spring) both;
+    }
+    @keyframes title-bounce-in {
+      0%   { opacity: 0; transform: translateY(40px) scale(0.8); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .subtitle-slide {
+      animation: subtitle-slide-in 0.8s var(--spring) 0.15s both;
+    }
+    @keyframes subtitle-slide-in {
+      0%   { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-align: center;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 800;
+      color: var(--ink);
+      text-align: center;
+    }
+
+    p {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: var(--ink-soft);
+      text-align: center;
+    }
+
+    /* ===== EASTER EGG ===== */
+    #easter-egg-msg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: var(--ink);
+      color: var(--gold);
+      padding: 20px 30px;
+      border-radius: 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      z-index: 9990;
+      text-align: center;
+      transition: transform 0.4s var(--spring);
+      max-width: 90vw;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    #easter-egg-msg.show { transform: translate(-50%, -50%) scale(1); }
+
+    /* ===== STAGE 1 STYLES ===== */
+    #stage-1 { background: linear-gradient(135deg, #FFF1F2 0%, #FFE4E8 50%, #FFF1F2 100%); }
+
+    .main-card-s1 {
+      background: white;
+      border-radius: 32px;
+      padding: clamp(28px, 6vw, 60px) clamp(24px, 5vw, 56px);
+      box-shadow: 0 24px 80px rgba(225, 29, 72, 0.15), 0 4px 20px rgba(0,0,0,0.06);
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      overflow: visible;
+    }
+
+    .main-card-s1::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 35px;
+      background: linear-gradient(135deg, var(--rose), var(--gold), var(--rose-light));
+      z-index: -1;
+      animation: border-spin 4s linear infinite;
+    }
+    @keyframes border-spin {
+      0%   { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+
+    .emoji-ring {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      display: block;
+      animation: spin-slow 4s linear infinite;
+    }
+    @keyframes spin-slow { 100% { transform: rotate(360deg); } }
+
+    .main-question {
+      font-size: clamp(1.8rem, 5vw, 2.8rem);
+      font-weight: 900;
+      color: var(--rose);
+      margin: 20px 0;
+      animation: pulse-text 2s ease-in-out infinite;
+    }
+    @keyframes pulse-text {
+      0%, 100% { transform: scale(1); }
+      50%       { transform: scale(1.04); }
+    }
+
+    .buttons-wrap {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    .btn-yes {
+      background: linear-gradient(135deg, var(--rose) 0%, #BE123C 100%);
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      border-radius: 50px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(225,29,72,0.4);
+      transition: transform 0.2s var(--spring), box-shadow 0.2s;
+      position: relative;
+    }
+    .btn-yes:hover {
+      transform: scale(1.08) rotate(-1deg);
+      box-shadow: 0 12px 35px rgba(225,29,72,0.5);
+    }
+
+    .btn-no {
+      background: #f3f4f6;
+      color: #9ca3af;
+      border: 2px solid #e5e7eb;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      position: fixed;
+      transition: left 0.3s cubic-bezier(0.68,-0.6,0.32,1.6), top 0.3s cubic-bezier(0.68,-0.6,0.32,1.6), font-size 0.3s, padding 0.3s, box-shadow 0.15s;
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .btn-no:hover {
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .escape-text {
+      position: fixed;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--rose);
+      pointer-events: none;
+      z-index: 200;
+      animation: float-away 1.2s ease-out forwards;
+      white-space: nowrap;
+    }
+    @keyframes float-away {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(0.7); }
+    }
+
+    .btn-no-dead {
+      animation: btn-die 0.8s ease-in forwards !important;
+    }
+    @keyframes btn-die {
+      0%   { transform: rotate(0deg) scale(1); opacity: 1; }
+      30%  { transform: rotate(720deg) scale(1.3); opacity: 1; }
+      100% { transform: rotate(1440deg) scale(0); opacity: 0; }
+    }
+
+    .no-dead-msg {
+      font-size: 0.95rem;
+      color: var(--ink-soft);
+      margin-top: 12px;
+      animation: subtitle-slide-in 0.5s var(--spring) both;
+    }
+
+    /* ===== STEP INDICATOR ===== */
+    .step-indicator {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .step-dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: all 0.3s var(--spring);
+    }
+    .step-dot.done   { background: var(--rose); color: white; }
+    .step-dot.active { background: var(--gold); color: var(--ink); transform: scale(1.2); box-shadow: 0 0 20px rgba(250,204,21,0.5); }
+    .step-dot.idle   { background: #e5e7eb; color: #9ca3af; }
+
+    /* ===== STAGE 2 STYLES ===== */
+    #stage-2 { background: linear-gradient(160deg, #FFF1F2 0%, #FFFBF5 60%, #FEF3C7 100%); padding-top: 40px; padding-bottom: 40px; }
+
+    .s2-inner { max-width: 600px; width: 100%; }
+
+    .calendar-wrap {
+      background: white;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+      margin: 20px 0;
+    }
+
+    .cal-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .cal-header span {
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--rose);
+      padding: 4px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      overflow-x: auto;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s var(--spring);
+      border: 2px solid transparent;
+      min-width: 36px;
+    }
+    .cal-day:hover   { background: var(--petal); transform: scale(1.1); }
+    .cal-day.selected { background: var(--rose); color: white; border-color: var(--rose); transform: scale(1.12); box-shadow: 0 4px 15px rgba(225,29,72,0.4); }
+    .cal-day.today   { border-color: var(--gold); }
+    .cal-day .day-name { font-size: 0.6rem; opacity: 0.7; margin-top: 2px; }
+
+    /* ===== TIME PICKER ===== */
+    .time-picker {
+      background: white;
+      border-radius: 24px;
+      padding: 24px 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+      margin: 16px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      direction: ltr;
+    }
+    .tp-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .tp-display {
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: var(--ink);
+      width: 72px;
+      text-align: center;
+      background: var(--petal);
+      border-radius: 16px;
+      padding: 8px 0;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #fecdd3;
+      transition: background 0.15s;
+    }
+    .tp-arrow {
+      background: none;
+      border: 2px solid #fecdd3;
+      border-radius: 10px;
+      width: 44px;
+      height: 32px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: var(--rose);
+      font-weight: 900;
+      font-family: sans-serif;
+      transition: all 0.15s var(--spring);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tp-arrow:hover { background: var(--petal); border-color: var(--rose); transform: scale(1.12); }
+    .tp-arrow:active { transform: scale(0.93); }
+    .tp-colon {
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: var(--rose);
+      line-height: 1;
+      padding-bottom: 4px;
+    }
+    .tp-ampm {
+      background: linear-gradient(135deg, var(--rose) 0%, #BE123C 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      direction: rtl;
+      transition: all 0.2s var(--spring);
+      box-shadow: 0 4px 15px rgba(225,29,72,0.3);
+      min-width: 82px;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .tp-ampm:hover { transform: scale(1.06); box-shadow: 0 6px 20px rgba(225,29,72,0.45); }
+
+    /* ===== STAGE 3 STYLES ===== */
+    #stage-3 { background: linear-gradient(140deg, #FFFBF5 0%, #FFF1F2 100%); padding: 40px 20px; }
+
+    .s3-inner { max-width: 540px; width: 100%; }
+
+    .venue-card {
+      background: white;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 16px 60px rgba(225,29,72,0.12);
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .venue-img-area {
+      background: linear-gradient(135deg, #3D1008 0%, #7C2D12 40%, #D97706 100%);
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .venue-img-area::before {
+      content: '☕';
+      font-size: 4rem;
+      position: absolute;
+      top: 20px; right: 30px;
+      opacity: 0.3;
+      animation: spin-slow 8s linear infinite;
+    }
+    .venue-img-area::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(250,204,21,0.2) 0%, transparent 60%);
+    }
+
+    .venue-pin {
+      font-size: 2.5rem;
+      animation: wobble-pin 2s ease-in-out infinite;
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes wobble-pin {
+      0%, 100% { transform: rotate(-8deg) translateY(0); }
+      25%       { transform: rotate(8deg) translateY(-5px); }
+      50%       { transform: rotate(-5deg) translateY(-8px); }
+      75%       { transform: rotate(5deg) translateY(-3px); }
+    }
+
+    .venue-body { padding: 24px; }
+    .venue-name { font-size: 1.6rem; font-weight: 900; color: var(--ink); }
+
+    .alt-input-wrap {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 0.5s ease;
+    }
+    .alt-input-wrap.open { max-height: 160px; }
+
+    .cafe-input {
+      width: 100%;
+      border: 2px solid #fecdd3;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      background: white;
+      direction: rtl;
+      margin-top: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .cafe-input:focus { border-color: var(--rose); }
+
+    .btn-sabt {
+      background: linear-gradient(135deg, var(--rose) 0%, #BE123C 100%);
+      color: white;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.2s var(--spring);
+    }
+    .btn-sabt:hover { transform: scale(1.05); }
+
+    /* Chashm animation */
+    #chashm-msg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--rose);
+      z-index: 9990;
+      text-align: center;
+      pointer-events: none;
+      transition: transform 0.5s var(--spring);
+    }
+    #chashm-msg.show {
+      animation: chashm-pop 1.5s var(--spring) forwards;
+    }
+    @keyframes chashm-pop {
+      0%   { transform: translate(-50%, -50%) scale(0) rotate(-10deg); opacity: 0; }
+      40%  { transform: translate(-50%, -50%) scale(1.3) rotate(5deg); opacity: 1; }
+      60%  { transform: translate(-50%, -50%) scale(0.9) rotate(-3deg); opacity: 1; }
+      80%  { transform: translate(-50%, -50%) scale(1.1) rotate(2deg); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; }
+    }
+
+    /* ===== STAGE 4 STYLES ===== */
+    #stage-4 {
+      background: linear-gradient(160deg, #FFFBF5 0%, #FFF1F2 40%, #FFE4E8 100%);
+      min-height: 100dvh;
+      padding: 40px 20px;
+      overflow: hidden;
+    }
+
+    .s4-inner { max-width: 520px; width: 100%; text-align: center; position: relative; z-index: 1; }
+
+    /* Cherry Blossom Flower */
+    .flower-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 24px;
+    }
+    .petal-ring {
+      position: absolute;
+      inset: 0;
+      animation: flower-bloom 1.2s var(--spring) both;
+    }
+    @keyframes flower-bloom {
+      0%   { transform: scale(0) rotate(-180deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .petal {
+      position: absolute;
+      width: 40px;
+      height: 60px;
+      border-radius: 50% 50% 50% 0;
+      background: linear-gradient(135deg, #FB7185, #FCA5A5);
+      transform-origin: bottom center;
+      opacity: 0.85;
+    }
+    .petal:nth-child(1) { transform: rotate(0deg)   translateY(-30px); animation: petal-sway 3s ease-in-out infinite; }
+    .petal:nth-child(2) { transform: rotate(45deg)  translateY(-30px); animation: petal-sway 3s ease-in-out 0.3s infinite; }
+    .petal:nth-child(3) { transform: rotate(90deg)  translateY(-30px); animation: petal-sway 3s ease-in-out 0.6s infinite; }
+    .petal:nth-child(4) { transform: rotate(135deg) translateY(-30px); animation: petal-sway 3s ease-in-out 0.9s infinite; }
+    .petal:nth-child(5) { transform: rotate(180deg) translateY(-30px); animation: petal-sway 3s ease-in-out 1.2s infinite; }
+    .petal:nth-child(6) { transform: rotate(225deg) translateY(-30px); animation: petal-sway 3s ease-in-out 1.5s infinite; }
+    .petal:nth-child(7) { transform: rotate(270deg) translateY(-30px); animation: petal-sway 3s ease-in-out 1.8s infinite; }
+    .petal:nth-child(8) { transform: rotate(315deg) translateY(-30px); animation: petal-sway 3s ease-in-out 2.1s infinite; }
+    @keyframes petal-sway {
+      0%, 100% { filter: brightness(1); }
+      50%       { filter: brightness(1.2); }
+    }
+    .flower-center {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px; height: 30px;
+      background: var(--gold);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(250,204,21,0.6);
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* Falling Petals */
+    .falling-petal {
+      position: fixed;
+      top: -30px;
+      font-size: 1.2rem;
+      pointer-events: none;
+      z-index: 0;
+      animation: petal-fall linear infinite;
+      opacity: 0;
+    }
+    @keyframes petal-fall {
+      0%   { transform: translateY(-30px) rotate(0deg) translateX(0); opacity: 0; }
+      10%  { opacity: 0.8; }
+      90%  { opacity: 0.6; }
+      100% { transform: translateY(110vh) rotate(720deg) translateX(30px); opacity: 0; }
+    }
+
+    .receipt-card {
+      background: white;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 16px 60px rgba(225,29,72,0.1);
+      margin: 20px 0;
+      position: relative;
+      z-index: 1;
+      animation: receipt-pop 0.8s var(--spring) 0.4s both;
+    }
+    @keyframes receipt-pop {
+      0%   { transform: scale(0.7) translateY(40px); opacity: 0; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed #fecdd3;
+      font-size: 0.95rem;
+    }
+    .receipt-row:last-child { border-bottom: none; }
+    .receipt-label { color: var(--ink-soft); font-weight: 500; }
+    .receipt-value { color: var(--ink); font-weight: 800; }
+
+    .final-title {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: 900;
+      color: var(--rose);
+      animation: title-bounce-in 0.8s var(--spring) 0.1s both;
+    }
+    .system-log {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      font-size: 0.75rem;
+      color: #d1d5db;
+      font-family: monospace;
+      z-index: 5;
+    }
+
+    .created-by {
+      font-size: 0.72rem;
+      color: #d1d5db;
+      text-align: center;
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ===== SHARED BUTTONS ===== */
+    .btn-primary {
+      background: linear-gradient(135deg, var(--rose) 0%, #BE123C 100%);
+      color: white;
+      border: none;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(225,29,72,0.35);
+      transition: transform 0.2s var(--spring), box-shadow 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .btn-primary:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 14px 35px rgba(225,29,72,0.45); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      background: white;
+      color: var(--ink);
+      border: 2px solid #fecdd3;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-family: 'Vazirmatn', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s var(--spring);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-secondary:hover { border-color: var(--rose); background: var(--petal); transform: translateY(-2px); }
+
+    /* ===== SECTION ANIM DELAYS ===== */
+    .anim-delay-1 { animation-delay: 0.1s; }
+    .anim-delay-2 { animation-delay: 0.2s; }
+    .anim-delay-3 { animation-delay: 0.35s; }
+    .anim-delay-4 { animation-delay: 0.5s; }
+
+    /* ===== CONFETTI MESSAGE ===== */
+    .confetti-msg {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--rose);
+      text-align: center;
+      margin-top: 12px;
+      min-height: 28px;
+    }
+
+    /* ===== GREETING BADGE ===== */
+    .greeting-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+      border-radius: 50px;
+      padding: 6px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--gold-dark);
+      margin-bottom: 16px;
+      animation: bounce-in 0.6s var(--spring) both;
+      border: 1px solid #FCD34D;
+    }
+    @keyframes bounce-in {
+      0%   { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      .main-card-s1 { padding: 28px 20px; }
+      .cal-day { font-size: 0.8rem; min-width: 30px; }
+      .btn-primary, .btn-secondary { font-size: 0.95rem; padding: 13px 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom Cursor -->
+  <div id="cursor"></div>
+
+  <!-- Easter Egg Message -->
+  <div id="easter-egg-msg">خب باشه تو خوندیش،<br>حالا باید قبول کنی 😂</div>
+
+  <!-- Chashm Message -->
+  <div id="chashm-msg">چشم 👁️</div>
+
+  <!-- Floating Background -->
+  <div id="bg-canvas"></div>
+
+  <!-- APP -->
+  <div id="app">
+
+    <!-- ===== STAGE 1: THE ASK ===== -->
+    <section class="stage active" id="stage-1">
+      <div class="blob-bg" style="width:400px;height:400px;background:#FB7185;top:-100px;right:-100px;"></div>
+      <div class="blob-bg" style="width:300px;height:300px;background:#FACC15;bottom:-80px;left:-80px;"></div>
+
+      <div class="main-card-s1">
+        <span class="emoji-ring">💌</span>
+
+        <p class="main-question title-bounce" id="easter-egg-trigger">
+          میای بریم کافه تا بیشتر همو بشناسیم؟ 😁 ☕
+        </p>
+
+        <div class="buttons-wrap">
+          <button class="btn-no" id="btn-no">نه...</button>
+          <button class="btn-yes" id="btn-yes" onclick="clickYes()">
+            آره، چرا که نه! 🎉
+          </button>
+        </div>
+
+        <div id="no-dead-area" style="min-height:28px;margin-top:12px;"></div>
+      </div>
+    </section>
+
+    <!-- ===== STAGE 2: DATE & TIME ===== -->
+    <section class="stage" id="stage-2">
+      <div class="s2-inner">
+        <div class="step-indicator">
+          <div class="step-dot done">۱</div>
+          <div class="step-dot active">۲</div>
+          <div class="step-dot idle">۳</div>
+        </div>
+
+        <h2 class="title-bounce">عالیه! حالا بیا برنامه بریزیم 📅</h2>
+
+        <!-- Calendar -->
+        <div class="calendar-wrap subtitle-slide anim-delay-2">
+          <p style="font-weight:700;margin-bottom:12px;color:var(--ink);">یه روز انتخاب کن 📆</p>
+          <div class="cal-header" id="cal-header"></div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <!-- Time Picker -->
+        <p style="font-weight:700;margin-bottom:12px;color:var(--ink);" class="subtitle-slide anim-delay-3">چه ساعتی؟ ⏰</p>
+        <div class="time-picker subtitle-slide anim-delay-4">
+          <div class="tp-group">
+            <button class="tp-arrow" onclick="changeHour(1)">▲</button>
+            <div class="tp-display" id="tp-hour">۳</div>
+            <button class="tp-arrow" onclick="changeHour(-1)">▼</button>
+          </div>
+          <div class="tp-colon">:</div>
+          <div class="tp-group">
+            <button class="tp-arrow" onclick="changeMinute(1)">▲</button>
+            <div class="tp-display" id="tp-minute">۰۰</div>
+            <button class="tp-arrow" onclick="changeMinute(-1)">▼</button>
+          </div>
+          <button class="tp-ampm" id="tp-ampm" onclick="toggleAmPm()">بعدازظهر</button>
+        </div>
+
+        <div class="confetti-msg" id="s2-msg"></div>
+
+        <div style="text-align:center;margin-top:20px;">
+          <button class="btn-primary" id="btn-s2-next" onclick="goToStage3()" disabled>
+            ادامه بدیم ← 
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== STAGE 3: VENUE ===== -->
+    <section class="stage" id="stage-3">
+      <div class="s3-inner">
+        <div class="step-indicator">
+          <div class="step-dot done">۱</div>
+          <div class="step-dot done">۲</div>
+          <div class="step-dot active">۳</div>
+        </div>
+
+        <h2 class="title-bounce">کجا بریم؟ 📍</h2>
+        <p class="subtitle-slide anim-delay-1" style="margin-top:8px;">
+          من یه پیشنهاد دارم ولی نظر تو مهمه!
+        </p>
+
+        <!-- Venue Card -->
+        <div class="venue-card subtitle-slide anim-delay-2">
+          <div class="venue-img-area">
+            <div class="venue-pin">📍</div>
+          </div>
+          <div class="venue-body">
+            <div class="venue-name" id="venue-name-display">کافه سرو</div>
+          </div>
+        </div>
+
+        <!-- Alt input -->
+        <div class="alt-input-wrap" id="alt-input-wrap">
+          <input
+            class="cafe-input"
+            id="cafe-alt-input"
+            type="text"
+            placeholder="کافه‌ی مورد علاقه‌ات رو بنویس... 🔍"
+            oninput="altCafeTyped(this.value)"
+          />
+          <div style="text-align:center;">
+            <button class="btn-sabt" onclick="submitAltCafe()">ثبت</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="toggleAltCafe()">
+            هممم... یه جای دیگه 🤔
+          </button>
+          <button class="btn-primary" id="btn-confirm-venue" onclick="confirmVenue()">
+            عالیه، همینجا! ✅
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== STAGE 4: FINAL ===== -->
+    <section class="stage" id="stage-4">
+      <div class="s4-inner">
+        <div class="flower-container">
+          <div class="petal-ring">
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+            <div class="petal"></div>
+          </div>
+          <div class="flower-center">🌸</div>
+        </div>
+
+        <h1 class="final-title">قراره! 🌸</h1>
+        <p class="subtitle-slide anim-delay-1" style="font-size:1.2rem;margin-top:8px;">
+          میبینمت سر قرار 💛
+        </p>
+
+        <!-- Receipt -->
+        <div class="receipt-card">
+          <div style="text-align:center;margin-bottom:16px;">
+            <span style="font-size:1.1rem;font-weight:800;color:var(--rose);">🎟️ رسید قرار ما</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">روز 📅</span>
+            <span class="receipt-value" id="r-day">—</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">ساعت ⏰</span>
+            <span class="receipt-value" id="r-time">—</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">مکان 📍</span>
+            <span class="receipt-value" id="r-venue">—</span>
+          </div>
+          <div class="receipt-row" style="border-bottom:none;padding-top:14px;">
+            <span class="receipt-label" style="color:var(--rose);font-weight:700;">وضعیت ✅</span>
+            <span class="receipt-value" style="color:var(--rose);">تأییدشده 🎉</span>
+          </div>
+        </div>
+
+        <p class="subtitle-slide anim-delay-2" style="font-size:1.3rem;font-weight:800;color:var(--ink);margin-top:8px;">
+          تا اون موقع مراقب خودت باش 💛
+        </p>
+
+        <p class="created-by">created by aliwb6</p>
+      </div>
+
+      <div class="system-log">
+        // status: نه_button.retired = true 👋
+      </div>
+    </section>
+
+  </div><!-- /#app -->
+
+  <script>
+    // ========================================
+    // EASY-TO-EDIT VARIABLES
+    // ========================================
+    const HER_NAME  = "محدثه";
+    const MY_NAME   = "علیرضا";
+    const MY_CAFE   = {
+      name:        "کافه سرو",
+      description: "",
+      vibes:       []
+    };
+
+    // ========================================
+    // STATE
+    // ========================================
+    const state = {
+      selectedDay:   null,
+      selectedTime:  null,
+      selectedVenue: MY_CAFE.name,
+      currentStage:  1,
+    };
+
+
+    const PERSIAN_NUMS = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+    const toPersian = n => String(n).split('').map(c => PERSIAN_NUMS[c] ?? c).join('');
+
+    // ========================================
+    // CURSOR
+    // ========================================
+    const cursor = document.getElementById('cursor');
+    let mouseX = 0, mouseY = 0;
+
+    document.addEventListener('mousemove', e => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      cursor.style.left = mouseX + 'px';
+      cursor.style.top  = mouseY + 'px';
+      if (Math.random() < 0.15) spawnSparkle(mouseX, mouseY);
+    });
+
+    const SPARKLES = ['✨','⭐','💫','🌟','💛','💕'];
+    function spawnSparkle(x, y) {
+      const el = document.createElement('div');
+      el.className = 'sparkle';
+      el.textContent = SPARKLES[Math.floor(Math.random() * SPARKLES.length)];
+      el.style.left = (x + (Math.random() - 0.5) * 20) + 'px';
+      el.style.top  = (y + (Math.random() - 0.5) * 20) + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 850);
+    }
+
+    // ========================================
+    // FLOATING BACKGROUND
+    // ========================================
+    const FLOATERS = ['❤️','💕','🌸','⭐','✨','💫','🌺','💛','🌼','🩷'];
+    const bgCanvas = document.getElementById('bg-canvas');
+
+    function createFloater() {
+      const el = document.createElement('div');
+      el.className = 'floater';
+      el.textContent = FLOATERS[Math.floor(Math.random() * FLOATERS.length)];
+      const size    = 0.8 + Math.random() * 1.4;
+      const left    = Math.random() * 100;
+      const dur     = 8 + Math.random() * 14;
+      const delay   = Math.random() * 10;
+      el.style.cssText = `
+        left: ${left}%; font-size: ${size}rem;
+        animation-duration: ${dur}s;
+        animation-delay: -${delay}s;
+        opacity: ${0.3 + Math.random() * 0.5};
+      `;
+      bgCanvas.appendChild(el);
+    }
+    for (let i = 0; i < 24; i++) createFloater();
+
+    // ========================================
+    // EASTER EGG
+    // ========================================
+    let easterTaps = 0, easterTimer;
+    const easterMsg = document.getElementById('easter-egg-msg');
+    document.getElementById('easter-egg-trigger').addEventListener('click', () => {
+      easterTaps++;
+      clearTimeout(easterTimer);
+      easterTimer = setTimeout(() => { easterTaps = 0; }, 1500);
+      if (easterTaps >= 5) {
+        easterMsg.classList.add('show');
+        setTimeout(() => { easterMsg.classList.remove('show'); easterTaps = 0; }, 3000);
+      }
+    });
+
+    // ========================================
+    // STAGE TRANSITIONS
+    // ========================================
+    function goToStage(n) {
+      const current  = document.getElementById('stage-' + state.currentStage);
+      const next     = document.getElementById('stage-' + n);
+      current.classList.add('fold-out');
+      setTimeout(() => {
+        current.classList.remove('active', 'fold-out');
+        next.classList.add('active', 'fold-in');
+        setTimeout(() => next.classList.remove('fold-in'), 700);
+        state.currentStage = n;
+        if (n === 4) initStage4();
+      }, 480);
+    }
+
+    // ========================================
+    // CONFETTI
+    // ========================================
+    function fireConfetti(opts = {}) {
+      if (typeof confetti === 'undefined') return;
+      const defaults = {
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#E11D48', '#FACC15', '#FB7185', '#FCA5A5', '#FFFFFF'],
+      };
+      confetti({ ...defaults, ...opts });
+    }
+
+    function fireConfettiBurst() {
+      fireConfetti({ angle: 60,  origin: { x: 0, y: 0.65 } });
+      setTimeout(() => fireConfetti({ angle: 120, origin: { x: 1, y: 0.65 } }), 200);
+      setTimeout(() => fireConfetti({ particleCount: 60, origin: { y: 0.4 } }), 400);
+    }
+
+    // ========================================
+    // STAGE 1: NO BUTTON LOGIC
+    // ========================================
+    const btnNo      = document.getElementById('btn-no');
+    const noDeadArea = document.getElementById('no-dead-area');
+    let noEscapeCount = 0;
+    let isDead = false;
+    let altInput = false;
+
+    // Position btn-no initially — place it near the yes button
+    function positionNoBtn() {
+      const yesBtn = document.getElementById('btn-yes');
+      if (yesBtn) {
+        const rect = yesBtn.getBoundingClientRect();
+        btnNo.style.left = (rect.left - 110) + 'px';
+        btnNo.style.top  = (rect.top + rect.height / 2 - 20) + 'px';
+      } else {
+        btnNo.style.left = (window.innerWidth / 2 - 160) + 'px';
+        btnNo.style.top  = (window.innerHeight / 2 + 20) + 'px';
+      }
+    }
+    window.addEventListener('load', positionNoBtn);
+    setTimeout(positionNoBtn, 500);
+
+    function getRandomPos() {
+      const margin = 80;
+      return {
+        x: margin + Math.random() * (window.innerWidth  - 2 * margin - 100),
+        y: margin + Math.random() * (window.innerHeight - 2 * margin - 50),
+      };
+    }
+
+    function showEscapeText(txt, x, y) {
+      const el = document.createElement('div');
+      el.className = 'escape-text';
+      el.textContent = txt;
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1300);
+    }
+
+    // Repulsion on mouse proximity
+    document.addEventListener('mousemove', e => {
+      if (isDead || state.currentStage !== 1) return;
+      const btnRect = btnNo.getBoundingClientRect();
+      const btnCX   = btnRect.left + btnRect.width  / 2;
+      const btnCY   = btnRect.top  + btnRect.height / 2;
+      const dist    = Math.hypot(e.clientX - btnCX, e.clientY - btnCY);
+      if (dist < 90) {
+        const angle = Math.atan2(btnCY - e.clientY, btnCX - e.clientX);
+        const flee  = 110;
+        let nx = btnCX + Math.cos(angle) * flee - btnRect.width  / 2;
+        let ny = btnCY + Math.sin(angle) * flee - btnRect.height / 2;
+        nx = Math.max(10, Math.min(window.innerWidth  - btnRect.width  - 10, nx));
+        ny = Math.max(10, Math.min(window.innerHeight - btnRect.height - 10, ny));
+        btnNo.style.left = nx + 'px';
+        btnNo.style.top  = ny + 'px';
+        if (noEscapeCount === 0) {
+          noEscapeCount = 1;
+          showEscapeText('فرار کرد! 😂', nx, ny - 30);
+        }
+      }
+    });
+
+    btnNo.addEventListener('click', () => {
+      if (isDead) return;
+      noEscapeCount++;
+      const pos = getRandomPos();
+      btnNo.style.transition = 'left 0.3s cubic-bezier(0.68,-0.6,0.32,1.6), top 0.3s cubic-bezier(0.68,-0.6,0.32,1.6), font-size 0.3s, padding 0.3s';
+      btnNo.style.left = pos.x + 'px';
+      btnNo.style.top  = pos.y + 'px';
+      btnNo.style.transform = 'rotate(720deg)';
+      setTimeout(() => { btnNo.style.transform = ''; btnNo.style.transition = ''; }, 400);
+
+      const msgs = ['نخیر! 😏', 'سعی نکن! 😤', 'داری اذیتم میکنی؟ 🥲', 'واقعاً؟ 😑', 'بیا بکل این فکرو از سرت بنداز 🙅'];
+      showEscapeText(msgs[Math.min(noEscapeCount - 1, msgs.length - 1)], pos.x, pos.y - 30);
+
+      // Shrink after 3 attempts
+      if (noEscapeCount >= 3) {
+        const scale = Math.max(0.3, 1 - (noEscapeCount - 2) * 0.2);
+        btnNo.style.fontSize = (0.9 * scale) + 'rem';
+        btnNo.style.padding  = (10 * scale) + 'px ' + (22 * scale) + 'px';
+      }
+
+      // Die after 5 attempts
+      if (noEscapeCount >= 5) {
+        isDead = true;
+        btnNo.classList.add('btn-no-dead');
+        setTimeout(() => {
+          btnNo.style.display = 'none';
+          noDeadArea.innerHTML = `<p class="no-dead-area" style="font-size:0.9rem;color:var(--ink-soft);text-align:center;animation:subtitle-slide-in 0.5s var(--spring) both;">
+            دکمه‌ی نه از این دنیا رفت 😇 فقط یه گزینه مونده...</p>`;
+        }, 900);
+      }
+    });
+
+    // ========================================
+    // YES BUTTON
+    // ========================================
+    function clickYes() {
+      fireConfettiBurst();
+      setTimeout(() => goToStage(2), 500);
+      buildCalendar();
+      buildVenueCard();
+    }
+
+    // ========================================
+    // STAGE 2: CALENDAR
+    // ========================================
+    const WEEKDAYS_FA = ['ش','ی','د','س','چ','پ','ج'];
+    const WEEKDAYS_FULL = ['شنبه','یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه'];
+
+    function buildCalendar() {
+      const header = document.getElementById('cal-header');
+      const grid   = document.getElementById('cal-grid');
+      header.innerHTML = '';
+      grid.innerHTML   = '';
+
+      WEEKDAYS_FA.forEach(d => {
+        const el = document.createElement('span');
+        el.textContent = d;
+        header.appendChild(el);
+      });
+
+      // Hardcoded: 9–15 Khordad 1404, starting on شنبه (col 0) — no empty cells needed
+      const DATES = [
+        { num: '۹',  name: 'شنبه',      abbr: 'ش' },
+        { num: '۱۰', name: 'یکشنبه',    abbr: 'ی' },
+        { num: '۱۱', name: 'دوشنبه',    abbr: 'د' },
+        { num: '۱۲', name: 'سه‌شنبه',   abbr: 'س' },
+        { num: '۱۳', name: 'چهارشنبه',  abbr: 'چ' },
+        { num: '۱۴', name: 'پنج‌شنبه',  abbr: 'پ' },
+        { num: '۱۵', name: 'جمعه',      abbr: 'ج' },
+      ];
+
+      DATES.forEach((day, i) => {
+        const el = document.createElement('div');
+        el.className = 'cal-day' + (i === 0 ? ' today' : '');
+        el.innerHTML = `${day.num}<span class="day-name">${day.abbr}</span>`;
+        el.dataset.dateStr = `${day.name} ${day.num} خرداد`;
+        el.onclick = () => selectDay(el);
+        grid.appendChild(el);
+      });
+    }
+
+    function selectDay(el) {
+      document.querySelectorAll('.cal-day.selected').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      state.selectedDay = el.dataset.dateStr;
+      spawnSparkle(el.getBoundingClientRect().left + 20, el.getBoundingClientRect().top);
+      checkS2();
+    }
+
+    // ========================================
+    // STAGE 2: TIME PICKER
+    // ========================================
+    let tpHour = 3;
+    let tpMinuteIdx = 0;
+    let tpAmPm = 'PM';
+    const MINUTE_OPTS = [0, 15, 30, 45];
+
+    function renderTimePicker() {
+      const min = MINUTE_OPTS[tpMinuteIdx];
+      const minStr = String(min).padStart(2, '0');
+      document.getElementById('tp-hour').textContent   = toPersian(tpHour);
+      document.getElementById('tp-minute').textContent = toPersian(minStr);
+      document.getElementById('tp-ampm').textContent   = tpAmPm === 'AM' ? 'قبل‌ازظهر' : 'بعدازظهر';
+      state.selectedTime = `${toPersian(tpHour)}:${toPersian(minStr)} ${tpAmPm === 'AM' ? 'قبل‌ازظهر' : 'بعدازظهر'}`;
+    }
+
+    function changeHour(dir) {
+      tpHour += dir;
+      if (tpHour > 12) tpHour = 1;
+      if (tpHour < 1)  tpHour = 12;
+      renderTimePicker();
+      fireConfetti({ particleCount: 18, spread: 40, origin: { y: 0.65 } });
+      checkS2();
+    }
+
+    function changeMinute(dir) {
+      tpMinuteIdx = (tpMinuteIdx + dir + 4) % 4;
+      renderTimePicker();
+      fireConfetti({ particleCount: 18, spread: 40, origin: { y: 0.65 } });
+      checkS2();
+    }
+
+    function toggleAmPm() {
+      tpAmPm = tpAmPm === 'AM' ? 'PM' : 'AM';
+      renderTimePicker();
+      checkS2();
+    }
+
+    function checkS2() {
+      const btn = document.getElementById('btn-s2-next');
+      if (state.selectedDay) {
+        btn.disabled = false;
+        document.getElementById('s2-msg').textContent = '🎉 عالی! حالا بریم مرحله بعد!';
+      }
+    }
+
+    function goToStage3() {
+      if (!state.selectedDay || !state.selectedTime) return;
+      fireConfetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+      setTimeout(() => goToStage(3), 300);
+    }
+
+    // ========================================
+    // STAGE 3: VENUE
+    // ========================================
+    let altCafeOpen = false;
+
+    function buildVenueCard() {
+      document.getElementById('venue-name-display').textContent = MY_CAFE.name;
+    }
+
+    function toggleAltCafe() {
+      altCafeOpen = !altCafeOpen;
+      const wrap = document.getElementById('alt-input-wrap');
+      wrap.classList.toggle('open', altCafeOpen);
+      if (altCafeOpen) document.getElementById('cafe-alt-input').focus();
+      else {
+        document.getElementById('cafe-alt-input').value = '';
+        state.selectedVenue = MY_CAFE.name;
+      }
+    }
+
+    function altCafeTyped(val) {
+      state.selectedVenue = val.trim() || MY_CAFE.name;
+    }
+
+    function submitAltCafe() {
+      const input = document.getElementById('cafe-alt-input');
+      if (input.value.trim()) {
+        state.selectedVenue = input.value.trim();
+      }
+      fireConfettiBurst();
+      setTimeout(() => goToStage(4), 400);
+    }
+
+    function confirmVenue() {
+      const input = document.getElementById('cafe-alt-input');
+      if (altCafeOpen && input.value.trim()) {
+        state.selectedVenue = input.value.trim();
+      } else {
+        state.selectedVenue = MY_CAFE.name;
+      }
+      fireConfettiBurst();
+      setTimeout(() => goToStage(4), 400);
+    }
+
+    // ========================================
+    // STAGE 4: FINAL
+    // ========================================
+    function initStage4() {
+      document.getElementById('r-day').textContent   = state.selectedDay   || '—';
+      document.getElementById('r-time').textContent  = state.selectedTime  || '—';
+      document.getElementById('r-venue').textContent = state.selectedVenue || MY_CAFE.name;
+
+      const booking = {
+        day:       state.selectedDay   || '—',
+        time:      state.selectedTime  || '—',
+        cafe:      state.selectedVenue || MY_CAFE.name,
+        timestamp: new Date().toISOString(),
+      };
+      localStorage.setItem('date_booking', JSON.stringify(booking));
+      console.log('%c📅 قرار ثبت شد', 'color:#E11D48;font-size:1.2rem;font-weight:900;');
+      console.table(booking);
+
+      fireConfettiBurst();
+      setTimeout(fireConfettiBurst, 1200);
+      setTimeout(fireConfettiBurst, 2800);
+
+      spawnFallingPetals();
+    }
+
+    function spawnFallingPetals() {
+      const PETALS = ['🌸','🌺','🌼','🩷','💮'];
+      for (let i = 0; i < 20; i++) {
+        const el = document.createElement('div');
+        el.className = 'falling-petal';
+        el.textContent = PETALS[Math.floor(Math.random() * PETALS.length)];
+        el.style.left         = Math.random() * 100 + 'vw';
+        el.style.fontSize     = (0.8 + Math.random() * 1.2) + 'rem';
+        el.style.animationDuration  = (4 + Math.random() * 8) + 's';
+        el.style.animationDelay     = (Math.random() * 6) + 's';
+        el.style.animationIterationCount = 'infinite';
+        document.getElementById('stage-4').appendChild(el);
+      }
+    }
+
+    // ========================================
+    // INIT
+    // ========================================
+    buildVenueCard();
+    positionNoBtn();
+    renderTimePicker();
+  </script>
+</body>
+</html>
