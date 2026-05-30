@@ -1008,6 +1008,10 @@
     // ========================================
     const HER_NAME  = "محدثه";
     const MY_NAME   = "علیرضا";
+
+    // Google Apps Script Web App endpoint that appends the booking to a Google Sheet.
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYjPlmyLE41mcwdECe6cYMjhqeSzi-rp80deKRdl4PZrS-kzH9-wLqFN31KNbNRc48/exec";
+
     const MY_CAFE   = {
       name:        "کافه سرو",
       description: "",
@@ -1395,6 +1399,17 @@
       localStorage.setItem('date_booking', JSON.stringify(booking));
       console.log('%c📅 قرار ثبت شد', 'color:#E11D48;font-size:1.2rem;font-weight:900;');
       console.table(booking);
+
+      // Send the booking to the Google Sheet via the Apps Script Web App.
+      // Silent: success/failure is only logged to the console, never shown to the user.
+      const { day, time, cafe, timestamp } = booking;
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ day, time, cafe, timestamp }),
+      })
+        .then(res => res.text())
+        .then(result => console.log('Booking sent to Sheet:', result))
+        .catch(err => console.log('Booking send failed:', err));
 
       fireConfettiBurst();
       setTimeout(fireConfettiBurst, 1200);
